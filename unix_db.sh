@@ -6,9 +6,9 @@ export PGPORT="5432"
 export PGUSER="postgres"
 export PGPASSWORD="postgres_admin_password"
 
-DB_USER="fviewer"
-DB_PASS="Fviewer#123"
-DB_NAME="fviewerdb"
+DB_USER="mydbuser"
+DB_PASS="mypassword"
+DB_NAME="mydatabase"
 
 # 1) 创建用户
 sudo -u postgres psql  -v ON_ERROR_STOP=1 <<SQL
@@ -23,34 +23,74 @@ export PGPASSWORD="$DB_PASS"
 
 psql -d "$DB_NAME" -v ON_ERROR_STOP=1 <<'SQL'
 
-CREATE TABLE IF NOT EXISTS events (
-    id BIGSERIAL PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS log (
+    id SERIAL PRIMARY KEY,
     username TEXT NOT NULL,
     action TEXT NOT NULL,
+    file TEXT NOT NULL,
+    folder TEXT NOT NULL,
+    repo TEXT NOT NULL,
     time TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-    status TEXT NOT NULL,
-    filepath TEXT NOT NULL,
     args TEXT);
 
-CREATE TABLE IF NOT EXISTS zones (id SERIAL PRIMARY KEY,name TEXT NOT NULL,lords JSONB);
-ALTER TABLE zones ADD CONSTRAINT zones_unique UNIQUE (name);
+CREATE TABLE IF NOT EXISTS repos (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    public BOOLEAN);
+
+CREATE TABLE IF NOT EXISTS folders (
+    id   SERIAL NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    parent_id INTEGER NOT NULL,
+    repo INTEGER NOT NULL,
+    level SMALLINT NOT NULL CHECK (level BETWEEN 0 AND 9)
+);
+
+CREATE TABLE IF NOT EXISTS repouserlevel(
+    id SERIAL NOT NULL PRIMARY KEY,
+    repo INTEGER NOT NULL,
+    userid INTEGER NOT NULL,
+    level SMALLINT NOT NULL CHECK (level BETWEEN 0 AND 9)
+    );
+
+
 
 CREATE TABLE IF NOT EXISTS files (
-    id           BIGSERIAL NOT NULL PRIMARY KEY,
-    name         JSONB NOT NULL,
-    parent_name  JSONB,
-    is_directory BOOLEAN NOT NULL,
-    size         BIGINT NOT NULL,
-    content_type TEXT NOT NULL,
-    md5          TEXT,
-    created_at   TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    modified_at  TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    creator      TEXT NOT NULL,
+    id            SERIAL NOT NULL PRIMARY KEY,
+    name          TEXT NOT NULL,
+    folder        INTEGER NOT NULL,
+    repo          INTEGER NOT NULL,
+    size          BIGINT NOT NULL,
+    content_type  TEXT NOT NULL,
+    md5           TEXT NOT NULL,
+    created_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    modified_at   TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    creator       TEXT NOT NULL,
     last_modifier TEXT NOT NULL,
-    zone TEXT NOT NULL);
+    disk_uuid     TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS file_del_records (
+    id            SERIAL NOT NULL PRIMARY KEY,
+    origin_id     INTEGER NOT NULL,
+    name          TEXT NOT NULL,
+    folder        INTEGER NOT NULL,
+    repo          INTEGER NOT NULL,
+    size          BIGINT NOT NULL,
+    content_type  TEXT NOT NULL,
+    md5           TEXT NOT NULL,
+    created_at    TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    modified_at   TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    creator       TEXT NOT NULL,
+    last_modifier TEXT NOT NULL,
+    disk_uuid     TEXT NOT NULL,
+    delete_at     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+    );
+
 
 CREATE TABLE IF NOT EXISTS accounts (
-    username TEXT NOT NULL PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
+    username TEXT NOT NULL,
     hashed   TEXT NOT NULL
 );
 SQL

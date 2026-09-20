@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="_图层_1" data-name="图层_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 47.96 47.96">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: url(#_未命名的渐变_8);
+      }
+
+      .cls-2 {
+        fill: #fff;
+      }
+    </style>
+    <radialGradient id="_未命名的渐变_8" data-name="未命名的渐变 8" cx="23.98" cy="23.98" fx="23.98" fy="23.98" r="26.81" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#cd8e38"/>
+      <stop offset=".45" stop-color="#cb8c37"/>
+      <stop offset=".61" stop-color="#c48836"/>
+      <stop offset=".73" stop-color="#b88033"/>
+      <stop offset=".83" stop-color="#a7742f"/>
+      <stop offset=".91" stop-color="#91652a"/>
+      <stop offset=".98" stop-color="#765324"/>
+      <stop offset="1" stop-color="#6d4d22"/>
+    </radialGradient>
+  </defs>
+  <circle class="cls-1" cx="23.98" cy="23.98" r="23.98"/>
+  <polygon class="cls-2" points="39.72 21.04 23.49 21.04 23.49 15.17 8.24 23.98 23.49 32.79 23.49 26.92 39.72 26.92 39.72 21.04"/>
+</svg>

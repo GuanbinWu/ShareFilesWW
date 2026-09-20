@@ -6,3 +6,9 @@ logo.ai
 conf
 db.txt
 bkp
+.env
+secrets/
+storage/
+bkp/
+data/
+recycle/

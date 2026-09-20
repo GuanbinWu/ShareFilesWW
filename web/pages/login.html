@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登录</title>
+
+
+<style>
+  :root {
+  --ironblack:#1B202D;
+  --ironblack_alpha:#bbcded;
+  --myshadow:#3b2700;
+  --balck: #503a0e;
+  --balck_alpha: #3b27003d;
+  --white: #e6e6e6;
+  --gray: #555555;
+  --blue:#1091db;
+  --shadow:#3b270085;
+  --fsize_big:32px;
+  --fsize_middle:16px;
+  --fsize_small:14px;
+  --my-boder-radius:4px;
+}
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--ironblack);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    #layout {
+      display: flex;
+      flex-direction: row;
+      gap: 10%;
+    }
+    .loginArea {
+      background: var(--white);
+      padding: 20px 30px 0px 30px;
+      box-shadow: 0 8px 30px var(--balck_alpha);
+      width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 5%;
+      position: relative;
+      justify-content: left;
+      align-items: center;
+    }
+
+    .hintArea {
+      background: var(--white);
+      padding: 40px 30px;
+      box-shadow: 0 8px 30px var(--balck_alpha);
+      width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      position: relative;
+      justify-content: center;
+      align-items: center;
+      color: var(--balck);     
+    }
+    .loginArea input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px outset var(--gray);
+      font-size: 15px;
+      outline: none;
+      transition: border 0.2s;
+    }
+    .loginArea input:focus {
+      border: 2px outset var(--blue);
+    }
+    
+    .btn-primary {
+      background: var(--balck);
+      color: var(--white);
+      padding: 4px 0px 4px 0px ;
+      border: 3px outset var(--gray);
+      font-size: 16px;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .btn-primary.hidden {
+      display: none;
+    }
+
+    .btn-primary:hover { background: #357abd; }
+    .btn-small-group {
+      gap: 12px;
+      justify-content: center;
+    }
+    .btn-small-group.hidden {
+      display: none;
+    }
+
+    .btn-small {
+      background: transparent;
+      border: none;
+      color: var(--gray);
+      font-size: 14px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    
+    
+    .btn-small:hover {
+      background: var(--white);
+      color: var(--blue);
+    }
+
+    #msg {
+      position: absolute;
+      text-align: center;
+      color: #e74c3c;
+      font-size: var(--fsize_middle);
+      min-height: 20px;
+      bottom: 0px;
+    }
+
+    .extra-fields{
+      display: flex;
+      gap: 10%;
+      flex-direction: column;
+      width: 100%;
+    }
+    .extra-fields.hidden{
+      display: none;
+    }
+
+    .extra-actions{
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    ul {list-style-type: none;}
+    ul li {margin-bottom: 16px;}
+  </style>
+</head>
+<body>
+<script type="module"  src="/static/script/login.js"></script>
+<!-- <script  src="/static/script/api.js"></script> -->
+</body>
+</html>
