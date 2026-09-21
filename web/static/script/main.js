@@ -163,7 +163,6 @@ const appState = {
     },
 };
 async function go_back() {
-    // console.log(appState.state);
     if (appState.state === "idle") {
         return;
     }
@@ -469,7 +468,6 @@ async function rcycState() {
     mainBody.append(goback);
 }
 async function repoState(repo_entry) {
-    //进入repo 查看文件夹树
     const folder_entrys = await API.folder_list(appState.token, repo_entry.id);
     appState.into_repo(repo_entry, folder_entrys);
     const my_level = appState.currentLevel.level;
@@ -555,6 +553,9 @@ function toolBar(refreshfn, cwd, cb_open, cb_close, cb_cked) {
     refresh.addEventListener("click", async (e) => {
         await refreshfn(appState.currentFolder.id);
     });
+    createText.addEventListener("click", async (e) => {
+        await create_new_text_file(refreshfn);
+    });
     multiSelect.addEventListener("click", () => {
         confirmSelect.hidden = false;
         multiSelect.hidden = true;
@@ -573,6 +574,40 @@ function toolBar(refreshfn, cwd, cb_open, cb_close, cb_cked) {
     });
     toolBar.append(span, cwd, refresh, goUp, upload, createText, multiSelect, confirmSelect);
     return toolBar;
+}
+async function create_new_text_file(refreshfn) {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    const box = document.createElement('div');
+    box.className = 'modal-box';
+    box.innerHTML = ``;
+    const name_editor = nameEditor("新建文本文件名称", "", true);
+    const message = Utils.messager();
+    const confirmfn = async () => {
+        try {
+            const new_name = name_editor.get();
+            Utils.is_file_name_valid(new_name);
+            const bytes = new ArrayBuffer(0);
+            const md5 = await calcFileMD5(bytes);
+            await API.file_upload(appState.token, new_name, appState.currentFolder.id, appState.currentRepo.id, "text/plain", md5, bytes);
+            await Utils.sleep(1000);
+            message.set("Ok");
+            overlay.remove();
+            await refreshfn(appState.currentFolder.id);
+        }
+        catch (e) {
+            if (e instanceof Error) {
+                message.set(e.message);
+            }
+            else
+                (message.set(String(e)));
+        }
+    };
+    const cancelfn = () => { overlay.remove(); };
+    const btn_container = Utils.confirmBtns("确认", "返回", confirmfn, cancelfn);
+    box.append(name_editor.el, btn_container, message.el);
+    overlay.append(box);
+    document.body.append(overlay);
 }
 async function folderState(repo_entry, folder_entry, permission) {
     const files = await API.file_list(appState.token, appState.currentRepo.id, folder_entry.id);
@@ -600,7 +635,9 @@ async function folderState(repo_entry, folder_entry, permission) {
         appState.into_folder(entry, files);
         const full_name = appState.concat_full_path(dir_id);
         cwd.textContent = full_name;
-        const file_table = fileTable(files, permission);
+        const child_folders = [...appState.allFolder.values()].filter(v => v.parent_id === dir_id);
+        console.log(child_folders);
+        const file_table = fileTable(child_folders, files, permission);
         fileContainer.replaceChildren(file_table.el);
         mainBody.replaceChildren(toolBar(refreshfn, cwd, file_table.open, file_table.close, file_table.slcted), fileContainer, noMoreContent(), goback);
     };
@@ -610,7 +647,20 @@ async function folderState(repo_entry, folder_entry, permission) {
             return false;
         return true;
     };
-    // fileContainer.addEventListener("click",()=>{})
+    fileContainer.addEventListener("click", async (e) => {
+        e.preventDefault();
+        const target = e.target;
+        if (!(target instanceof Element))
+            return;
+        const el = target.closest(".folder-tr");
+        if (!(el instanceof HTMLElement))
+            return;
+        const id = Number(el.dataset.id);
+        const folder = appState.allFolder.get(id);
+        if (folder.level <= appState.currentLevel.level) {
+            refreshfn(id);
+        }
+    });
     fileContainer.addEventListener("dblclick", async (e) => {
         e.preventDefault();
         const target = e.target;
@@ -2177,7 +2227,7 @@ function rcycTable(items) {
     table.append(thead, tbody);
     return table;
 }
-function fileTable(items, permission) {
+function fileTable(folder_entries, file_enties, permission) {
     const seletor = [];
     const slctor_open = () => {
         for (const i of seletor) {
@@ -2204,8 +2254,37 @@ function fileTable(items, permission) {
     const tbody = document.createElement("tbody");
     tbody.id = "fileTableBody";
     const thead = fileTableHeader();
-    items.sort((a, b) => a.id - b.id);
-    items.forEach(item => {
+    folder_entries.sort((a, b) => a.id - b.id);
+    folder_entries.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.dataset.id = String(item.id);
+        tr.className = "folder-tr";
+        if (item.level > appState.currentLevel.level) {
+            tr.classList.add("banned");
+        }
+        const cbTd = document.createElement('td');
+        cbTd.className = 'check-col';
+        const nameTd = document.createElement('td');
+        const iconContainer = document.createElement('img');
+        iconContainer.width = 18;
+        iconContainer.height = 18;
+        iconContainer.src = Utils.iconMap.dir;
+        const fileName = item.name;
+        const textSpan = document.createElement('span');
+        textSpan.textContent = ' ' + fileName;
+        iconContainer.style.verticalAlign = 'middle';
+        textSpan.style.verticalAlign = 'middle';
+        nameTd.append(iconContainer, textSpan);
+        const sizeTd = document.createElement('td');
+        const createdatTd = document.createElement('td');
+        const modifiedatTd = document.createElement('td');
+        const creatorTd = document.createElement("td");
+        const modifierTd = document.createElement("td");
+        tr.append(cbTd, nameTd, sizeTd, createdatTd, modifiedatTd, creatorTd, modifierTd);
+        tbody.appendChild(tr);
+    });
+    file_enties.sort((a, b) => a.id - b.id);
+    file_enties.forEach(item => {
         const tr = document.createElement('tr');
         tr.dataset.id = String(item.id);
         tr.className = "file-tr";

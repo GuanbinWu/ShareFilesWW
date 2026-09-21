@@ -602,7 +602,7 @@ body {
   position: fixed;
   right: 40%;
   bottom: 20px;
-  z-index: 1000;
+  /* z-index: 1000; */
   width: 80px;
   height: 80px;
   /* opacity: 0; */
