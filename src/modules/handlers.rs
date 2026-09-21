@@ -271,7 +271,7 @@ pub async fn repo_edit_handler(state:AppState,session:Session,rq:Repo)->Result<i
     if existing.public==false && rq.public==true{
         let levels = state.store.query_level_by_repo(existing.id).await.map_err(err_to_reject)?;
         for i in levels{
-            state.store.del_level(i.id);
+            state.store.del_level(i.id).await.map_err(err_to_reject)?;
         }
     }
     state.store.add_log(LogEntry { 

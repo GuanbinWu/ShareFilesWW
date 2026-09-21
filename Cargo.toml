@@ -27,4 +27,4 @@ uuid = { version = "0.8", features = ["serde", "v4"] }
 infer = "0.15"
 percent-encoding="2"
 dotenv = "0.15.0"
-job_scheduler = "1.2.1"
+tokio-cron-scheduler = "0.15.1"

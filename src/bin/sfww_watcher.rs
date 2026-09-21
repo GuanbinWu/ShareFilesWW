@@ -3,7 +3,7 @@
 //任务：每天3：00定时备份数据库
 //任务：每天3：00定时检查回收站中已经超过一个月的文件，删除且清理数据表
 
-use job_scheduler;
+use tokio_cron_scheduler;
 use tokio;
 use sqlx::ConnectOptions;
 use ShareFilesWW::modules::database::Store;
@@ -42,10 +42,11 @@ async fn main(){
     let config_ptr =config.clone();
     let store = Arc::new(Store::new(db_url.as_str()).await);
     let store_ptr=store.clone();
-    let rt = tokio::runtime::Runtime::new().unwrap();
-    let mut sched = job_scheduler::JobScheduler::new();
+    // let rt = tokio::runtime::Runtime::new().unwrap();
+    let sched = tokio_cron_scheduler::JobScheduler::new().await.unwrap();
 
-    sched.add(job_scheduler::Job::new("0 0 3 * * ?".parse().unwrap(), move|| {
+
+    sched.add(tokio_cron_scheduler::Job::new_async("0 0 3 * * * *", move |_uuid, _l| {
         let t = config_ptr.clone();
         let s = store_ptr.clone();
         let host = db_host.clone();
@@ -54,14 +55,25 @@ async fn main(){
         let dbname = db_dbname.clone();
         let pg =pgpass.clone();
         let bkpbklp= bkp.clone();
-        rt.block_on(async {
-            utils::bkp_database(&host,port,user,dbname,&pg,&bkpbklp).await;
+
+        let date = chrono::Utc::now().format("%Y%m%d_%H%M%S");
+        let db_to = bkp.join(&format!("{}.dump",date));
+
+        Box::pin(async move{
+            utils::bkp_database(&host,port,user,dbname,&pg,&db_to).await;
             utils::clean_expire_files(30, t, s).await;
             match utils::del_expired_db_bkp(&bkpbklp, 7, ".dump"){
                 Ok(_)=>println!("del_expired_db_bkp success keep 7"),
                 Err(e)=>panic!("{}",e)
             }
-        });
-    }));
+        })
+    })
+    .expect("创建定时任务失败"))
+    .await.unwrap();
+    sched.start().await.unwrap();
+
+    tokio::signal::ctrl_c().await.expect("监听 Ctrl+C 失败");
+    println!("收到退出信号，正在关闭...");
+
 
 }

@@ -12,8 +12,9 @@
 // 手动触发磁盘文件清理
 // 以语义形式导出数据库与文件
 // 以语义形式尝试构建数据库与文件
+// 新增一个用户名到白名单
 
-
+use rand::{self, Rng};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::path::{ PathBuf};
 use std::sync::Arc;
@@ -55,7 +56,7 @@ async fn main(){
     .port(db_port)
     .to_url_lossy();
 
-    let config = Arc::new(Config::new(storage, data, webrc, max_username_len, min_pwd_len, db_url.to_string(), session_duration, rcyc_bin, key));
+    let config = Arc::new(Config::new(storage, data.clone(), webrc, max_username_len, min_pwd_len, db_url.to_string(), session_duration, rcyc_bin, key));
     let store = Arc::new(Store::new(db_url.as_str()).await);
 
 
@@ -69,6 +70,11 @@ async fn main(){
         cli::ToolCommands::Keygen(v)=> keygen(v.len),
         cli::ToolCommands::ResetPwd(v)=> resetpwd(&v.username,store.clone()).await,
         cli::ToolCommands::CkCapa=>show_db_capacity(store.clone()).await,
+        cli::ToolCommands::AppendWhite(v)=>{
+            let mut path=data.clone();
+            path.push("username_whitelist.txt");
+            add_user_to_whitelist(&v.username, &path);
+        }
         cli::ToolCommands::Export(v)=>{
             match export_to_dir(&config.storage,store.clone(),&v.path).await{
                 Ok(_) =>println!("Ok"),
@@ -149,7 +155,29 @@ async fn build_from_disk(storage:&PathBuf,store:Arc<Store>,from:&PathBuf)->Resul
     Ok(())
 }
 
+fn add_user_to_whitelist(username:&str,whitelist:&PathBuf){
+    use std::io::{Read, Seek, SeekFrom, Write};
+    let mut file = std::fs::OpenOptions::new()
+        .read(true)
+        .append(true)
+        .open(whitelist)
+        .unwrap();
 
+    let len = file.metadata().unwrap().len();
+    let ends_with_newline = if len > 0 {
+        file.seek(SeekFrom::End(-1)).unwrap();
+        let mut last = [0u8; 1];
+        file.read_exact(&mut last).unwrap();
+        last[0] == b'\n'
+    } else {
+        false
+    };
+    if len > 0 && !ends_with_newline {
+        file.write_all(b"\n").unwrap();
+    }
+    file.write_all(username.as_bytes()).unwrap();
+    file.write_all(b"\n").unwrap();
+}
 
 
 async fn build_a_repo(from:&PathBuf,repo:&Repo,root_id:i32,store:Arc<Store>,storage:&PathBuf)->Result<(),SFWWErrors>{
@@ -295,9 +323,19 @@ fn concat_full_name(root:&mut PathBuf,f:&FolderEntry,folders:&HashMap<i32,Folder
 
 
 
-fn keygen(len:i32){
-    let v = auth::pwd_generator(len as usize);
-    println!("{}",v)
+fn keygen(length:i32){
+    const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ\
+                             abcdefghijklmnopqrstuvwxyz\
+                             0123456789";
+    let mut rng = rand::rngs::OsRng;
+    let v:String = (0..length)
+    .map(|_| {
+            let idx = rng.gen_range(0..CHARSET.len());
+            CHARSET[idx] as char
+    })
+    .collect();
+    // let v = auth::pwd_generator(len as usize);
+    println!("{}",v);
 }
 
 async fn resetpwd(name:&str,store:Arc<Store>){

@@ -40,6 +40,8 @@ pub enum ToolCommands {
     Export(PathArg),
     #[command(name = "build",about= "从一个文件系统构建逻辑文件系统，要求路径为空")]
     Build(PathArg),
+    #[command(name = "appwhite",about= "追加一个用户名到白名单里")]
+    AppendWhite(ResetArgs),
 }
 
 #[derive(Debug, Args)]
